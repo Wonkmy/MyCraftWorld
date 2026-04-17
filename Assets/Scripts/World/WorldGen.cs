@@ -78,14 +78,24 @@ public class WorldGen : MonoBehaviour
                 int worldZ = LocalToWorldZ(localZ);
                 byte surfaceHeight = HeightAt((float)worldX, (float)worldZ);
                 Debug.Log($"surfaceHeight:{surfaceHeight}");
-                if (surfaceHeight <= 19)
+                if(surfaceHeight >= 25)
                 {
-                    renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.Water));
+                    renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.Wood));
                 }
                 else
                 {
-                    renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
+                    if(surfaceHeight > 19)
+                    {
+                        renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
+                    }
+                    else if (surfaceHeight <= 19)
+                    {
+                        renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.Water));
+                    }
+                    //renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
                 }
+                
+                
                 //renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
             }
         }

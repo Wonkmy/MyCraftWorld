@@ -8,6 +8,7 @@ public enum BlockType
     Dirt = 2,
     Stone = 3,
     Water = 4,
+    Wood = 5,
     // 可以继续添加其他方块类型
 }
 
@@ -26,11 +27,12 @@ public static class BlockInfo
     public static void InitBlockUVs(int atlasSize)
     {
         BlockUVs[GetBlockType(BlockType.Air)] = null;// 空气不需要UV
-        BlockUVs[GetBlockType(BlockType.Grass)] = GetUVsForAtlasCell(0, 0, atlasSize);// 0 代表草地
-        BlockUVs[GetBlockType(BlockType.GrassDirt)] = GetUVsForAtlasCell(1, 0, atlasSize);// 1 代表d带草地的泥土
-        BlockUVs[GetBlockType(BlockType.Dirt)] = GetUVsForAtlasCell(2, 0, atlasSize);// 2 代表泥土
-        BlockUVs[GetBlockType(BlockType.Stone)] = GetUVsForAtlasCell(3, 0, atlasSize);// 3 代表石头
-        BlockUVs[GetBlockType(BlockType.Water)] = GetUVsForAtlasCell(1, 1, atlasSize);// 4 代表水
+        BlockUVs[GetBlockType(BlockType.Grass)] = GetUVsForAtlasCell(0, 0, atlasSize);// 代表草地
+        BlockUVs[GetBlockType(BlockType.GrassDirt)] = GetUVsForAtlasCell(1, 0, atlasSize);// 代表d带草地的泥土
+        BlockUVs[GetBlockType(BlockType.Dirt)] = GetUVsForAtlasCell(2, 0, atlasSize);// 代表泥土
+        BlockUVs[GetBlockType(BlockType.Stone)] = GetUVsForAtlasCell(3, 0, atlasSize);// 代表石头
+        BlockUVs[GetBlockType(BlockType.Water)] = GetUVsForAtlasCell(1, 1, atlasSize);//  代表水
+        BlockUVs[GetBlockType(BlockType.Wood)] = GetUVsForAtlasCell(0, 3, atlasSize);// 代表木头
     }
 
     // 获取图集中特定格子的UV坐标
