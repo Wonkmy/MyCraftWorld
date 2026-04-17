@@ -12,7 +12,7 @@ public class WorldGen : MonoBehaviour
     // 需要写到配置文件里的数据，暂时写在这里
     int m_chunkSize = 16;// chunk的大小
     NoiseProperties m_noiseProperties;
-    int m_localWorldSize = 8;// 世界的大小
+    int m_localWorldSize = 4;// 世界的大小
     float m_halfLocalWorldSize;// 世界大小的一半，方便计算
     float m_xChunkOffset = 1;// chunk坐标的偏移，方便世界生成算法计算
     float m_zChunkOffset = 1;
@@ -43,24 +43,25 @@ public class WorldGen : MonoBehaviour
         RenderChunks();
     }
 
-    public void CreateChunks(int c_x,int c_z) {
+
+    void CreateChunks(int c_x,int c_z) {
         for (int x = 0; x <= m_localWorldSize; x++)
         {
             for (int z = 0; z <= m_localWorldSize; z++)
             {
-                CreateChunk(x + c_x, z + c_z);
+                CreateChunk(From3Dto1D(x, 0, z), x, z);
             }
         }
     }
 
-    void CreateChunk(int c_x, int c_z)
+    void CreateChunk(int id, int c_x, int c_z)
     {
         // 生成一个Chunk
         GameObject chunkObj = new GameObject("Chunk");
         //chunkObj.transform.position = new Vector3(c_x, c_y, c_z);
         // 添加RenderChunk组件并初始化
         RenderChunk renderChunk = chunkObj.AddComponent<RenderChunk>();
-        renderChunk.InitChunk();
+        renderChunk.InitChunk(id);
         GenChunk(renderChunk, c_x, c_z);
         // 将RenderChunk添加到字典中
         AddChunkToDicts(renderChunk);
@@ -77,26 +78,7 @@ public class WorldGen : MonoBehaviour
                 int worldX = LocalToWorldX(localX);
                 int worldZ = LocalToWorldZ(localZ);
                 byte surfaceHeight = HeightAt((float)worldX, (float)worldZ);
-                Debug.Log($"surfaceHeight:{surfaceHeight}");
-                if(surfaceHeight >= 25)
-                {
-                    renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.Wood));
-                }
-                else
-                {
-                    if(surfaceHeight > 19)
-                    {
-                        renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
-                    }
-                    else if (surfaceHeight <= 19)
-                    {
-                        renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.Water));
-                    }
-                    //renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
-                }
-                
-                
-                //renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
+                renderChunk.GetChunk().SetBlock(worldX, surfaceHeight, worldZ, BlockInfo.GetBlockType(BlockType.GrassDirt));
             }
         }
     }
@@ -156,27 +138,54 @@ public class WorldGen : MonoBehaviour
         return (int)(p_localZ - (m_halfLocalWorldSize - m_zChunkOffset) * m_chunkSize);
     }
 
-    private int From3Dto1D(uint p_x, uint p_y, uint p_z)
+    private int From3Dto1D(int p_x, int p_y, int p_z)
     {
         return (int)(p_x + m_localWorldSize * (p_z + p_y * m_localWorldSize));
     }
-    public byte GetBlockID(float p_x, float p_y, float p_z)
+    public BlockType GetBlockID(float p_x, float p_y, float p_z)
     {
         p_x = Mathf.Round(p_x);
         p_y = Mathf.Round(p_y);
         p_z = Mathf.Round(p_z);
-        int xChunk = (int)((p_x / m_chunkSize) + (m_halfLocalWorldSize) - m_xChunkOffset);
-        int yChunk = (int)(p_y / m_chunkSize);
-        int zChunk = (int)((p_z / m_chunkSize) + (m_halfLocalWorldSize) - m_zChunkOffset);
+        float xChunk = ((p_x / m_chunkSize) + (m_halfLocalWorldSize) - m_xChunkOffset);
+        float yChunk = (p_y / m_chunkSize);
+        float zChunk = ((p_z / m_chunkSize) + (m_halfLocalWorldSize) - m_zChunkOffset);
         if (xChunk < 0 || xChunk >= m_localWorldSize ||
             yChunk < 0 || yChunk >= 16 ||
             zChunk < 0 || zChunk >= m_localWorldSize)
-            return 0;
+        { return BlockType.Air; }
+
+        RenderChunk target = null;
+        if(chunkMaps.ContainsKey(From3Dto1D((int)xChunk, (int)yChunk, (int)zChunk)))
+        {
+            target = chunkMaps[From3Dto1D((int)xChunk, (int)yChunk, (int)zChunk)];
+        }
+        else
+        {
+            return BlockType.Air;
+        }
+        //if (!chunkMaps.TryGetValue(From3Dto1D((int)xChunk, (int)yChunk, (int)zChunk), out target))
+        //{ return BlockType.Air; }
+        return target.GetChunk().GetBlock(
+            Mathf.CeilToInt((p_x + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize),
+            Mathf.CeilToInt(p_y % m_chunkSize),
+            Mathf.CeilToInt((p_z + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize));
+    }
+
+    public void SetBlock(float x, float y, float z, int blockType, bool needUpdate = true)
+    {
+        int xChunk = (int)((x / m_chunkSize) + (m_halfLocalWorldSize) - m_xChunkOffset);
+        int yChunk = (int)(y / m_chunkSize);
+        int zChunk = (int)((z / m_chunkSize) + (m_halfLocalWorldSize) - m_zChunkOffset);
+        if (xChunk < 0 || xChunk >= m_localWorldSize ||
+            yChunk < 0 || yChunk >= 16 ||
+            zChunk < 0 || zChunk >= m_localWorldSize)
+            return;
         RenderChunk target;
-        if (!chunkMaps.TryGetValue(From3Dto1D((uint)xChunk, (uint)yChunk, (uint)zChunk), out target))
-            return 0;
-        return target.GetChunk().GetBlock((byte)((p_x + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize),
-                                (byte)(p_y % m_chunkSize),
-                                (byte)((p_z + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize));
+        if (!chunkMaps.TryGetValue(From3Dto1D((int)xChunk, (int)yChunk, (int)zChunk), out target))
+            return;
+        target.GetChunk().SetBlock((byte)((x + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize),
+                                (byte)(y % m_chunkSize),
+                                (byte)((z + m_halfLocalWorldSize * m_chunkSize) % m_chunkSize), blockType, needUpdate);
     }
 }

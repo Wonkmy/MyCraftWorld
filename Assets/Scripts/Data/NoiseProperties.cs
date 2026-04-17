@@ -10,5 +10,5 @@ public class NoiseProperties
     public float maxHeight = 40f;// 最大高度，噪声值将被乘以这个值来得到最终的高度
     public float heightScale = 0.5f;// 高度缩放，越大越高，越小越低
     public float redistribution = 1.05f;// 重分布，越大越平坦，越小越崎岖
-    public float additionalElevation = 10f;// 额外的高度提升，越大越高，越小越低
+    public float additionalElevation = 0f;// 额外的高度提升，越大越高，越小越低
 }

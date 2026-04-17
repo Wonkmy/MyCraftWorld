@@ -13,15 +13,20 @@ public class Chunk
 
     Dictionary<Vector3Int,BlockType> blockMaps = new Dictionary<Vector3Int, BlockType>();// 存储方块数据，key是方块坐标，value是方块类型
 
-    public Chunk()
+    public Chunk(int id)
     {
-        ChunkID = System.Guid.NewGuid().GetHashCode();
+        ChunkID = id;
         mesh = new Mesh();
     }
 
     public void SetBlock(int x, int y, int z, int blockType,bool needUpdate = true)
     {
-        if (blockType == -1) return;// 如果是空气方块，不需要生成任何面
+        if (blockType == -1)// -1表示删除方块
+        {
+            if (needUpdate) { 
+                blockMaps.Remove(new Vector3Int(x, y, z));
+            }
+        }
         // 存储方块数据
         blockMaps[new Vector3Int(x, y, z)] = BlockInfo.GetBlockType(blockType);
 
@@ -165,13 +170,15 @@ public class Chunk
     {
         return mesh;
     }
-    public byte GetBlock(byte p_x, byte p_y, byte p_z)
+    public BlockType GetBlock(int p_x, int p_y, int p_z)
     {
         Vector3Int pos = new Vector3Int(p_x, p_y, p_z);
-        return (byte)BlockInfo.GetBlockType(blockMaps[pos]);
+        if (!blockMaps.ContainsKey(pos))
+            return BlockType.Air;
+        return blockMaps[pos];
     }
 
-    public byte GetBlockBySide(byte p_x, byte p_y, byte p_z, Side side)
+    public BlockType GetBlockBySide(byte p_x, byte p_y, byte p_z, Side side)
     {
         Vector3Int pos = new Vector3Int(p_x, p_y, p_z);
         Vector3Int offset = Vector3Int.zero;
